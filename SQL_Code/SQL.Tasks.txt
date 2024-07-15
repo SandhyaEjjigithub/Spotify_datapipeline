@@ -1,0 +1,48 @@
+-- Set up TASKADMIN role
+USE ROLE securityadmin;
+CREATE OR REPLACE ROLE taskadmin;
+
+-- Grant EXECUTE TASK privilege to TASKADMIN role
+USE ROLE accountadmin;
+GRANT EXECUTE TASK ON ACCOUNT TO ROLE taskadmin;
+
+-- Grant TASKADMIN role to SYSADMIN role
+USE ROLE securityadmin;
+GRANT ROLE taskadmin TO ROLE sysadmin;
+
+-- Create a task for handling slowly changing dimension (SCD) in the album_table
+CREATE OR REPLACE TASK album_scd_task
+WAREHOUSE = COMPUTE_WH
+SCHEDULE = '1 minute'
+ERROR_ON_NONDETERMINISTIC_MERGE = FALSE
+AS
+CALL album_scd_demo();
+
+-- Create a task for handling slowly changing dimension (SCD) in the artist_table
+CREATE OR REPLACE TASK artist_scd_task
+WAREHOUSE = COMPUTE_WH
+SCHEDULE = '1 minute'
+ERROR_ON_NONDETERMINISTIC_MERGE = FALSE
+AS
+CALL artist_scd_demo();
+
+-- Create a task for handling slowly changing dimension (SCD) in the song_table
+CREATE OR REPLACE TASK song_scd_task
+WAREHOUSE = COMPUTE_WH
+SCHEDULE = '1 minute'
+ERROR_ON_NONDETERMINISTIC_MERGE = FALSE
+AS
+CALL song_scd_demo();
+
+-- Show all tasks
+SHOW TASKS;
+
+-- Start tasks
+ALTER TASK album_scd_task RESUME;
+ALTER TASK artist_scd_task RESUME;
+ALTER TASK song_scd_task RESUME;
+
+-- Stop tasks
+ALTER TASK album_scd_task SUSPEND;
+ALTER TASK artist_scd_task SUSPEND;
+ALTER TASK song_scd_task SUSPEND;

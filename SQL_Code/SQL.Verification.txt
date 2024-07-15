@@ -1,0 +1,23 @@
+SELECT * FROM information_schema.load_history
+WHERE table_name = 'ALBUM_TABLE'
+ORDER BY last_load_time DESC;
+
+SELECT * FROM information_schema.load_history
+WHERE table_name = 'ARTIST_TABLE'
+ORDER BY last_load_time DESC;
+
+SELECT * FROM information_schema.load_history
+WHERE table_name = 'SONG_TABLE'
+ORDER BY last_load_time DESC;
+
+COPY INTO album_table
+FROM @spotify_pipeline.public.spotify_stage/album_data/album_transformed_2024-07-12
+FILE_FORMAT = (FORMAT_NAME = csv_fileformat);
+
+COPY INTO ARTIST_TABLE
+FROM @spotify_pipeline.public.spotify_stage/artist_data/artist_transformed_2024-07-12
+FILE_FORMAT = (FORMAT_NAME = csv_fileformat);
+
+COPY INTO SONG_TABLE
+FROM @spotify_pipeline.public.spotify_stage/songs_data/songs_transformed_2024-07-12
+FILE_FORMAT = (FORMAT_NAME = csv_fileformat);

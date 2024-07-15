@@ -1,0 +1,81 @@
+-- Create Database
+CREATE OR REPLACE DATABASE SPOTIFY_PIPELINE;
+
+-- Use the created database
+USE DATABASE SPOTIFY_PIPELINE;
+
+-- Create Schema 'public' if not exists
+CREATE SCHEMA IF NOT EXISTS public;
+
+-- Use the created schema
+USE SCHEMA public;
+
+-- Create or replace storage integration for S3 access
+CREATE OR REPLACE STORAGE INTEGRATION s3_init
+    TYPE = EXTERNAL_STAGE
+    STORAGE_PROVIDER = S3
+    ENABLED = TRUE
+    STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::637423232251:role/snowflakeroleforspotify'
+    STORAGE_ALLOWED_LOCATIONS = ('s3://spotify-etl-project-sandhya')
+    COMMENT = 'Creating connection to s3';
+
+-- Describe the storage integration for S3 access
+DESC INTEGRATION s3_init;
+
+-- Define file format for CSV files
+CREATE OR REPLACE FILE FORMAT csv_fileformat
+    TYPE = csv
+    FIELD_DELIMITER = ','
+    SKIP_HEADER = 1
+    NULL_IF = ('NULL', 'null')
+    EMPTY_FIELD_AS_NULL = TRUE
+    FIELD_OPTIONALLY_ENCLOSED_BY = '"'
+    ERROR_ON_COLUMN_COUNT_MISMATCH = FALSE;
+
+-- Describe file format
+DESC FILE FORMAT csv_fileformat;
+
+-- Create a stage for loading data from S3
+CREATE OR REPLACE STAGE spotify_stage
+    URL = 's3://spotify-etl-project-sandhya/transformed_data/'
+    STORAGE_INTEGRATION = s3_init
+    FILE_FORMAT = csv_fileformat;
+
+-- List files in the S3 stage for comments data
+LIST @spotify_stage;
+
+-- Define table structure for processed albums data
+CREATE OR REPLACE TABLE album_table (
+    album_id VARCHAR,
+    name VARCHAR,
+    release_date DATE,
+    total_tracks INTEGER,
+    url VARCHAR
+);
+
+
+-- Define table structure for processed artist data
+CREATE OR REPLACE TABLE artist_table (
+    artist_id VARCHAR,
+    artist_name VARCHAR,
+    external_url VARCHAR
+);
+
+
+-- Define table structure for processed songs data
+CREATE OR REPLACE TABLE song_table (
+    song_id VARCHAR,
+    song_name VARCHAR,
+    duration_ms NUMBER,
+    url VARCHAR,
+    popularity NUMBER,
+    song_added TIMESTAMP,
+    album_id VARCHAR,
+    artist_id VARCHAR
+);
+
+-- Verify table creation
+SHOW TABLES LIKE 'ALBUM_TABLE';
+SHOW TABLES LIKE 'ARTIST_TABLE';
+SHOW TABLES LIKE 'SONG_TABLE';
+

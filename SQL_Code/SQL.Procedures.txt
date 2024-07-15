@@ -1,0 +1,99 @@
+-- Procedure for handling data in album_table
+CREATE OR REPLACE PROCEDURE album_scd_demo()
+RETURNS STRING NOT NULL
+LANGUAGE JAVASCRIPT
+AS
+$$
+    // Merge command to update or insert data into album_table based on changes in album_raw_table
+    var cmd = `
+        MERGE INTO album_table a
+        USING album_raw_table ar
+        ON a.album_id = ar.album_id
+        WHEN MATCHED AND (a.album_name <> ar.album_name OR
+                          a.artist_id <> ar.artist_id OR
+                          a.release_date <> ar.release_date OR
+                          a.total_tracks <> ar.total_tracks)
+        THEN UPDATE
+        SET a.album_name = ar.album_name,
+            a.artist_id = ar.artist_id,
+            a.release_date = ar.release_date,
+            a.total_tracks = ar.total_tracks,
+            a.update_timestamp = CURRENT_TIMESTAMP()
+        WHEN NOT MATCHED THEN
+        INSERT (album_id, album_name, artist_id, release_date, total_tracks)
+        VALUES (ar.album_id, ar.album_name, ar.artist_id, ar.release_date, ar.total_tracks);
+    `;
+    // Truncate command to clear album_raw_table after data is processed
+    var cmd1 = "TRUNCATE TABLE album_raw_table;";
+    var sql = snowflake.createStatement({sqlText: cmd});
+    var sql1 = snowflake.createStatement({sqlText: cmd1});
+    sql.execute();
+    sql1.execute();
+    return cmd + '\n' + cmd1;
+$$;
+
+-- Procedure for handling data in artist_table
+CREATE OR REPLACE PROCEDURE artist_scd_demo()
+RETURNS STRING NOT NULL
+LANGUAGE JAVASCRIPT
+AS
+$$
+    // Merge command to update or insert data into artist_table based on changes in artist_raw_table
+    var cmd = `
+        MERGE INTO artist_table a
+        USING artist_raw_table ar
+        ON a.artist_id = ar.artist_id
+        WHEN MATCHED AND (a.artist_name <> ar.artist_name OR
+                          a.genre <> ar.genre)
+        THEN UPDATE
+        SET a.artist_name = ar.artist_name,
+            a.genre = ar.genre,
+            a.update_timestamp = CURRENT_TIMESTAMP()
+        WHEN NOT MATCHED THEN
+        INSERT (artist_id, artist_name, genre)
+        VALUES (ar.artist_id, ar.artist_name, ar.genre);
+    `;
+    // Truncate command to clear artist_raw_table after data is processed
+    var cmd1 = "TRUNCATE TABLE artist_raw_table;";
+    var sql = snowflake.createStatement({sqlText: cmd});
+    var sql1 = snowflake.createStatement({sqlText: cmd1});
+    sql.execute();
+    sql1.execute();
+    return cmd + '\n' + cmd1;
+$$;
+
+-- Procedure for handling data in song_table
+CREATE OR REPLACE PROCEDURE song_scd_demo()
+RETURNS STRING NOT NULL
+LANGUAGE JAVASCRIPT
+AS
+$$
+    // Merge command to update or insert data into song_table based on changes in song_raw_table
+    var cmd = `
+        MERGE INTO song_table s
+        USING song_raw_table sr
+        ON s.song_id = sr.song_id
+        WHEN MATCHED AND (s.song_name <> sr.song_name OR
+                          s.album_id <> sr.album_id OR
+                          s.artist_id <> sr.artist_id OR
+                          s.duration_ms <> sr.duration_ms OR
+                          s.explicit <> sr.explicit)
+        THEN UPDATE
+        SET s.song_name = sr.song_name,
+            s.album_id = sr.album_id,
+            s.artist_id = sr.artist_id,
+            s.duration_ms = sr.duration_ms,
+            s.explicit = sr.explicit,
+            s.update_timestamp = CURRENT_TIMESTAMP()
+        WHEN NOT MATCHED THEN
+        INSERT (song_id, song_name, album_id, artist_id, duration_ms, explicit)
+        VALUES (sr.song_id, sr.song_name, sr.album_id, sr.artist_id, sr.duration_ms, sr.explicit);
+    `;
+    // Truncate command to clear song_raw_table after data is processed
+    var cmd1 = "TRUNCATE TABLE song_raw_table;";
+    var sql = snowflake.createStatement({sqlText: cmd});
+    var sql1 = snowflake.createStatement({sqlText: cmd1});
+    sql.execute();
+    sql1.execute();
+    return cmd + '\n' + cmd1;
+$$;

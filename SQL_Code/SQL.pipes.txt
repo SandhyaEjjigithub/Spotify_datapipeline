@@ -1,0 +1,37 @@
+-- Create or replace pipe for album data ingestion
+CREATE OR REPLACE PIPE album_pipe
+AUTO_INGEST = TRUE
+AS
+COPY INTO Album_table
+FROM @spotify_stage/album_data;
+
+-- Create or replace pipe for artist data ingestion
+CREATE OR REPLACE PIPE artist_pipe
+AUTO_INGEST = TRUE
+AS
+COPY INTO Artist_table
+FROM @spotify_stage/artist_data;
+
+-- Create or replace pipe for song data ingestion
+CREATE OR REPLACE PIPE song_pipe
+AUTO_INGEST = TRUE
+AS
+COPY INTO Song_table
+FROM @spotify_stage/song_data;
+
+-- Describe the pipes
+DESC PIPE album_pipe;
+DESC PIPE artist_pipe;
+DESC PIPE song_pipe;
+
+-- Check the status of the pipes
+SELECT SYSTEM$PIPE_STATUS('SPOTIFY_PIPELINE.PUBLIC.ALBUM_PIPE');
+SELECT SYSTEM$PIPE_STATUS('SPOTIFY_PIPELINE.PUBLIC.ARTIST_PIPE');
+SELECT SYSTEM$PIPE_STATUS('SPOTIFY_PIPELINE.PUBLIC.SONG_PIPE');
+
+
+
+-- Select data from the tables
+SELECT * FROM Album_table;
+SELECT * FROM Artist_table;
+SELECT * FROM Song_table;
